@@ -5,25 +5,16 @@ import com.demo.springwebflux.dto.Request;
 import com.demo.springwebflux.dto.Response;
 import com.demo.springwebflux.exception.GenralException;
 import com.demo.springwebflux.exception.ProductNotFoundException;
-import com.demo.springwebflux.model.Product;
 import com.demo.springwebflux.repository.ProductRepository;
 import com.demo.springwebflux.service.ProductService;
 import com.demo.springwebflux.util.AppUtil;
-import io.netty.util.internal.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 @Service
 @Slf4j
@@ -89,13 +80,9 @@ public class ProductServiceImpl implements ProductService {
                 .flatMap(existingProduct -> productRepository.delete(existingProduct)
                         .then(Mono.just(AppUtil.entityToDto(existingProduct))))
                 .map(productDto -> {
-                    System.out.println("here");
                     return AppUtil.dtoToRsponse(Arrays.asList(productDto));
                 })
-                .onErrorMap(ex -> {
-                    log.error("Exception Occured :" + ex);
-                    throw new GenralException(ex.getMessage());
-                });
+                .onErrorMap(err -> err instanceof ProductNotFoundException ? err : new GenralException(err.getMessage())).log();
     }
 
 
