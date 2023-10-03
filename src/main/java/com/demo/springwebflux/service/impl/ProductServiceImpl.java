@@ -37,10 +37,7 @@ public class ProductServiceImpl implements ProductService {
                     response.setProductDto(productDtos);
                     return response;
                 })
-                .onErrorMap(ex -> {
-                    log.error("Exception Occured :" + ex);
-                    throw new GenralException(ex.getMessage());
-                });
+                .onErrorMap(err -> err instanceof ProductNotFoundException ? err : new GenralException(err.getMessage())).log();
     }
 
     @Override
@@ -58,10 +55,7 @@ public class ProductServiceImpl implements ProductService {
                     response.setIsSuccess(true);
                     return response;
                 })
-                .onErrorMap(ex -> {
-                    log.error("Exception Occured :" + ex);
-                    throw new GenralException(ex.getMessage());
-                });
+                .onErrorMap(err -> err instanceof ProductNotFoundException ? err : new GenralException(err.getMessage())).log();
     }
 
     @Override
@@ -70,7 +64,7 @@ public class ProductServiceImpl implements ProductService {
                 .map(AppUtil::entityToDto)
                 .collectList()
                 .map(AppUtil::dtoToRsponse)
-                .onErrorMap(ex -> new GenralException(ex.getMessage()));
+                .onErrorMap(err -> err instanceof ProductNotFoundException ? err : new GenralException(err.getMessage())).log();
     }
 
     @Override
@@ -88,8 +82,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Mono<Response> updateProduct(Mono<Request> request) {
-        return request.map(requestobj -> {
-                    return requestobj.getProductDto().get(0);
+        return request.map(requestObj -> {
+                    return requestObj.getProductDto().get(0);
                 })
                 .map(productDto -> {
                     return productRepository.findById(productDto.getId()).switchIfEmpty(Mono.error(new ProductNotFoundException(productDto.getId())))
@@ -114,10 +108,7 @@ public class ProductServiceImpl implements ProductService {
                 }).flatMap(responseMono -> {
                     return responseMono;
                 })
-                .onErrorMap(ex -> {
-                    log.error("Exception Occured :" + ex);
-                    throw new GenralException(ex.getMessage());
-                });
+                .onErrorMap(err -> err instanceof ProductNotFoundException ? err : new GenralException(err.getMessage())).log();
 
     }
 }
